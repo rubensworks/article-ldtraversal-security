@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title property="foaf:name schema:name">A Prospective Analysis of Security Vulnerabilities within Link Traversal-Based Query Processing</title>
+  <link rel="stylesheet" media="screen" href="styles/screen.css" />
+  <link rel="stylesheet" media="print"  href="styles/print.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <meta name="citation_title" content="A Prospective Analysis of Security Vulnerabilities within Link Traversal-Based Query Processing">
+  <meta name="citation_author" content="Ruben Taelman" />
+  <meta name="citation_author" content="Ruben Verborgh" />
+  
+  <meta name="citation_publication_date" content="2021/06/08" />
+</head>
+
+<body prefix="dctypes: http://purl.org/dc/dcmitype/ pimspace: http://www.w3.org/ns/pim/space# rsa: http://www.w3.org/ns/auth/rsa# cert: http://www.w3.org/ns/auth/cert# wgs: http://www.w3.org/2003/01/geo/wgs84_pos# biblio: http://purl.org/net/biblio# bibo: http://purl.org/ontology/bibo/ book: http://purl.org/NET/book/vocab# ov: http://open.vocab.org/terms/ doap: http://usefulinc.com/ns/doap# dbr: http://dbpedia.org/resource/ dbp: http://dbpedia.org/property/ sio: http://semanticscience.org/resource/ opmw: http://www.opmw.org/ontology/ deo: http://purl.org/spar/deo/ doco: http://purl.org/spar/doco/ cito: http://purl.org/spar/cito/ fabio: http://purl.org/spar/fabio/ solid: http://www.w3.org/ns/solid/terms# acl: http://www.w3.org/ns/auth/acl# dio: https://w3id.org/dio# lsc: http://linkedscience.org/lsc/ns#" typeof="schema:CreativeWork sioc:Post prov:Entity lsc:Research">
+  <header>
+  <h1 id="a-prospective-analysis-of-security-vulnerabilities-within-link-traversal-based-query-processing">A Prospective Analysis of Security Vulnerabilities within Link Traversal-Based Query Processing</h1>
+
+  <ul id="authors">
+    <li><a rev="lsc:participatesIn" property="foaf:maker schema:creator schema:author schema:publisher" href="https://www.rubensworks.net/" typeof="foaf:Person schema:Person" resource="https://www.rubensworks.net/#me">Ruben Taelman</a></li>
+    <li><a rev="lsc:participatesIn" property="foaf:maker schema:creator schema:author schema:publisher" href="https://ruben.verborgh.org/" typeof="foaf:Person schema:Person" resource="https://ruben.verborgh.org/profile/#me">Ruben Verborgh</a></li>
+  </ul>
+
+  <ul id="affiliations">
+    <li id="idlab">IDLab,
+          Department of Electronics and Information Systems,
+          Ghent University – imec,
+          {firstname.lastname}@ugent.be</li>
+  </ul>
+
+</header>
+
+<div id="content">
+  <section id="abstract" inlist="" rel="schema:hasPart" resource="#abstract">
+<div datatype="rdf:HTML" property="schema:description">
+      <h2 property="schema:name">Abstract</h2>
+      <!-- Context      -->
+      <p>The societal and economical consequences surrounding Big Data-driven platforms
+have increased the call for decentralized solutions.
+However, retrieving and querying data in more decentralized environments
+requires fundamentally different approaches,
+whose properties are not yet well understood.
+Link-Traversal-based Query Processing (LTQP) is a technique
+for querying over decentralized data networks,
+in which a client-side query engine discovers data by traversing links between documents.
+Since decentralized environments are potentially unsafe due to their non-centrally controlled nature,
+<!-- Need         -->
+there is a need for client-side LTQP query engines to be resistant against security threats
+aimed at the query engine’s host machine or the query initiator’s personal data.
+<!-- Task         -->
+As such, we have performed an analysis of potential security vulnerabilities of LTQP.
+<!-- Object       -->
+This article provides an overview of security threats in related domains,
+which are used as inspiration for the identification of 10 LTQP security threats.
+Each threat is explained, together with an example, and one or more avenues for mitigations are proposed.
+<!-- Findings     -->
+<!-- Conclusion   -->
+We conclude with several concrete recommendations for LTQP query engine developers and data publishers
+as a first step to mitigate some of these issues.
+<!-- Perspectives -->
+With this work, we start filling the unknowns for enabling querying over decentralized environments.
+Aside from future work on security, wider research is needed to uncover missing building blocks for enabling true decentralization.</p>
+
+    </div>
+</section>
+
+
+<div class="double-column">
+
+<main>
+  <section id="introduction" inlist="" rel="schema:hasPart" resource="#introduction">
+<div datatype="rdf:HTML" property="schema:description">
+          <h2 property="schema:name">Introduction</h2>
+
+          <p>Contrary to the Web’s initial design as a <em>decentralized</em> ecosystem,
+the Web has grown to be a very centralized place,
+as large parts of the Web are currently made up of <a property="schema:citation http://purl.org/spar/cito/cites" href="https://ruben.verborgh.org/articles/redecentralizing-the-web/">a few large Bid Data-driven centralized platforms</a> <span class="references">[<a href="#ref-1">1</a>]</span>.
+This large-scale centralization has lead to a number of problems related to <a href="https://www.theguardian.com/technology/live/2018/apr/10/mark-zuckerberg-testimony-live-congress-facebook-cambridge-analytica">personal information abuse</a>,
+and other <a href="https://fs.blog/2017/07/filter-bubbles/">economic and societal problems</a>.
+In order to solve these problems, there are calls to go back to the original vision of a decentralized Web.
+The leading effort to achieve this decentralization is <a property="schema:citation http://purl.org/spar/cito/cites" href="https://ruben.verborgh.org/articles/redecentralizing-the-web/">Solid</a> <span class="references">[<a href="#ref-1">1</a>]</span>.
+Solid proposes a radical <em>decentralization</em> of data across <em>personal data vaults</em>,
+where everyone is in full control of its own personal data vault.
+This vault can contain any number of documents,
+where its owner can determine who or what can access what parts of this data.
+In contrast to the current state of the Web where data primarily resides in a small number of huge data sources,
+Solid leads to a a Web where data is spread over a huge number of data sources.</p>
+
+          <p>Our focus in this article is not on decentralizing data,
+but on finding data after it has been decentralized,
+which can be done via <em>query processing</em>.
+The issue of query processing over data has been primarily tackled from a Big Data standpoint so far.
+However, if decentralization efforts such as Solid will become a reality,
+we need to be prepared for the need to query over a huge number of data sources.
+For example, decentralized social networking applications will need to be able to query over networks of friends containing hundreds or thousands of data documents.
+As such, we need new query techniques that are specifically designed for such levels of decentralization.
+One of the most promising techniques that could achieve this is called <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/s13222-013-0122-1"><a href="https://link.springer.com/10.1007/s13222-013-0122-1">Link-Traversal-based Query Processing (LTQP)</a></span> <span class="references">[<a href="#ref-2">2</a>, <a href="#ref-3">3</a>]</span>.
+LTQP is able to query over a set of documents that are connected to each other via <em>links</em>.
+An LTQP query engine typically starts from one or more documents,
+and <em>traverses</em> links between them in a crawling-manner in order to resolve the given query.</p>
+
+          <p>Since LTQP is still a relative young area of research,
+in which there are still a number of open problems that need to be tackled,
+notably <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/s13222-013-0122-1"><a href="https://link.springer.com/10.1007/s13222-013-0122-1">result completeness and query termination</a></span> <span class="references">[<a href="#ref-2">2</a>]</span>.
+Aside from these known issues,
+we also state the importance of <em>security</em>.
+Security is a highly important and well-investigated topic in the context of Web applications <span class="references">[<a href="#ref-4">4</a>, <a href="#ref-5">5</a>]</span>,
+but it has not yet been investigated in the context of LTQP.
+As such, <strong>we investigate in this article security issues related to LTQP engines</strong>,
+which may threaten the integrity of the user’s data, machine, and user experience,
+but also lead to privacy issues if personal data is unintentionally leaked.
+Specifically, we focus on data-driven security issues that are inherent to LTQP
+due to the fact that it requires a query engine to follow links on the Web,
+which is an uncontrolled, unpredictable and potentially unsafe environment.
+Instead of analyzing a single security threat in-depth,
+we perform a broader high-level analysis of multiple security threats.</p>
+
+          <p>Since LTQP is still a relatively new area of research,
+its real-world applications are currently limited.
+As such, we can not learn from security issues that arose in existing systems.
+Instead of waiting for –potentially unsafe– widespread applications of LTQP,
+we draw inspiration from related domains that <em>are</em> already well-established.
+Specifically, we draw inspiration from the domains of crawling and Web browsers in <a href="#related-work">Section 2</a>,
+and draw links to what impact these known security issues will have on LTQP query engines.
+In <a href="#use-case">Section 3</a>, we introduce a guiding use case that will be used to illustrate different threats with.
+After that, we discuss our method of categorizing vulnerabilities in <a href="#classification">Section 4</a>.
+Next, we list 10 data-driven security vulnerabilities related to LTQP in <a href="#vulnerabilities">Section 5</a>,
+which are derived from known vulnerabilities in similar domains.
+For each vulnerability, we provide examples, and sketch possible high-level mitigations.
+Finally, we discuss the future of LTQP security and conclude in <a href="#conclusions">Section 6</a>.</p>
+
+        </div>
+</section>
+
+  <section id="related-work" inlist="" rel="schema:hasPart" resource="#related-work">
+<div datatype="rdf:HTML" property="schema:description">
+          <h2 property="schema:name">Related Work</h2>
+
+          <p>This section lists relevant related work in the topics of LTQP and security.</p>
+
+          <h3 id="link-traversal-based-query-processing">Link-Traversal-based Query Processing</h3>
+
+          <p>More than a decade ago, <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/978-3-642-04930-9_19"><a href="https://link.springer.com/10.1007/978-3-642-04930-9_19">Link-Traversal-based Query Processing (LTQP)</a></span> <span class="references">[<a href="#ref-3">3</a>, <a href="#ref-2">2</a>]</span>
+has been introduced as an alternative query paradigm for enabling query execution over document-oriented interfaces.
+These documents are usually <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/DesignIssues/LinkedData.html">Linked Data</a> <span class="references">[<a href="#ref-6">6</a>]</span> serialized using any <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/">RDF</a> <span class="references">[<a href="#ref-7">7</a>]</span> serialization.
+RDF is suitable to LTQP and decentralization because of its global semantics,
+which allows queries to be written independently of the schemas of specific documents.
+In order to execute these queries, LTQP processing occurs over live data,
+and discover links to other documents via the <em>follow-your-nose principle</em> during query execution.
+This is in contrast to the typical query execution over centralized database-oriented interfaces such as <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/">SPARQL endpoints</a> <span class="references">[<a href="#ref-8">8</a>]</span>,
+where data is assumed to be loaded into the endpoint beforehand,
+and no additional data is discovered during query execution.</p>
+
+          <p>Concretely, LTQP typically starts off with an input query and a set of seed documents.
+The query engine then dereferences all seed documents via an HTTP <code>GET</code> request,
+discovers links to other documents inside those documents,
+and recursively dereferences those discovered documents.
+Since document discovery can be a very long (or infinite) process,
+query execution happens during the discovery process
+based on all the RDF triples that are extracted from the discovered documents.
+This is typically done by implementing these processes in an iterative pipeline <span class="references">[<a href="#ref-9">9</a>]</span>.
+Furthermore, since this discovery approach can lead to a large number of discovered documents,
+different <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/978-3-642-30284-8_8"><a href="https://link.springer.com/10.1007/978-3-642-30284-8_8">reachability criteria</a></span> <span class="references">[<a href="#ref-10">10</a>]</span> have been introduced
+as a way to restrict what links are to be followed for a given query.</p>
+
+          <p>So far, most research into LTQP has happened in the areas of <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/978-3-642-30284-8_8"><a href="https://link.springer.com/10.1007/978-3-642-30284-8_8">formalization</a></span> <span class="references">[<a href="#ref-10">10</a>, <a href="#ref-11">11</a>]</span>, <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/978-3-319-46523-4_19"><a href="https://link.springer.com/10.1007/978-3-319-46523-4_19">performance improvements</a></span> <span class="references">[<a href="#ref-12">12</a>, <a href="#ref-13">13</a>, <a href="#ref-14">14</a>]</span>, and <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1016/j.websem.2016.10.001"><a href="http://www.sciencedirect.com/science/article/pii/S1570826816300476">query syntax</a></span> <span class="references">[<a href="#ref-15">15</a>]</span>.
+<a property="schema:citation http://purl.org/spar/cito/cites" href="https://arxiv.org/abs/2005.02239">One work has indicated the importance of <em>trustworthiness</em></a> <span class="references">[<a href="#ref-16">16</a>]</span>
+during link traversal, as people may publish false or contradicting information,
+which would need to be avoided or filtered out during query execution.
+Another work mentioned the need for LTQP engines to adhere to <code>robots.txt</code> files <span class="references">[<a href="#ref-17">17</a>]</span>
+in order to not lead to unintentional denial of service attacks of data publishers.
+Given the focus of our work on data-driven security vulnerabilities related to LTQP engines,
+we only consider this issue of <em>trustworthiness</em> further in this work,
+and omit the security vulnerabilities from a data publisher’s perspective.</p>
+
+          <h3 id="related-work-rdf-query-processing">Vulnerabilities of RDF Query Processing</h3>
+
+          <p>Research involving the security vulnerabilities of RDF query processing
+has been primarily focused on injection attacks within Web applications
+that internally send SPARQL queries to a SPARQL endpoint.
+So far, no research has been done on vulnerabilities specific to RDF federated querying or link traversal.
+As such, we list the relevant work on single-source SPARQL querying hereafter.</p>
+
+          <p>The most significant type of security vulnerability in Web applications in general is <em>Injection through User Input</em>,
+of which SQL injection attacks <span class="references">[<a href="#ref-4">4</a>]</span> are a primary example.
+Orduna et al. <span class="references">[<a href="#ref-5">5</a>]</span> investigate this type of attack in the context of SPARQL queries,
+and show that <em>parameterized queries</em> can help avoid this type of attacks.
+A parameterized query is a query <em>template</em> that can contain multiple <em>parameters</em>,
+which can be instantiated with different values.
+To avoid injection attacks, parameterized query libraries
+will perform the necessary validation and escaping on the inserted values.
+The authors implemented parameterized queries in the Jena framework <span class="references">[<a href="#ref-18">18</a>]</span> as a mitigation example.</p>
+
+          <p>SemGuard <span class="references">[<a href="#ref-19">19</a>]</span> is a system that aims to detect injection attacks in both SPARQL and SQL queries for query engines that support both.
+A motivation of this work is that the use of parameterized queries is not always desirable,
+as systems may already have been implemented without them,
+and updating them would be too expensive.
+This approach is based on the automatic analysis of the incoming query’s parse tree.
+It will check if the parse tree only has a leaf node for the expected user input, compared to the original template query’s parse tree.
+If it does not have a leaf node, this means that the user is attempting to execute queries that were not intended by the application developer.</p>
+
+          <p>Asdhar et al. <span class="references">[<a href="#ref-20">20</a>]</span> analyzed injection attacks to Web applications
+via the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2013/REC-sparql11-query-20130321/">SPARQL query language</a> <span class="references">[<a href="#ref-21">21</a>]</span> and the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2013/REC-sparql11-update-20130321/">SPARQL update language</a> <span class="references">[<a href="#ref-22">22</a>]</span>.
+Furthermore, they provide <em>SemWebGoat</em>, a deliberately insecure RDF-based Web application for educational purposes around security.
+All of the discussed attacks involve some form of injection,
+leading to retrieval or modification of unwanted data,
+or denial-of-service by for example injecting the <code>?s ?p ?o</code> pattern.
+Such <code>?s ?p ?o</code> patterns cause all data to be fetched,
+which for large datasets can require long execution times,
+which may lead to denials of service for following SPARQL queries,
+or even <a property="schema:citation http://purl.org/spar/cito/cites" href="http://link.springer.com/chapter/10.1007/978-3-642-41338-4_18">crash the server and lead to availability issues</a> <span class="references">[<a href="#ref-23">23</a>]</span>.</p>
+
+          <h3 id="linked-data-access-control">Linked Data Access Control</h3>
+
+          <p>Kirrane et al. <span class="references">[<a href="#ref-24">24</a>]</span> surveyed the existing approaches for achieving access control in RDF,
+for both authentication and authorization.
+The authors mention that only a minority of those works apply specifically to the document-oriented nature of Linked Data.
+They do however mention that non-Linked-Data-specific approaches could potentially be applied to Linked Data in future work.
+Hereafter, we briefly discuss the relevant aspects of access control research that applies to Linked Data.
+To the best of our knowledge, no security vulnerabilities have yet been identified for any of these.</p>
+
+          <h4 id="authentication">Authentication</h4>
+
+          <p>Authentication involves verifying an agent’s identity through certain credentials.
+A <a href="https://www.w3.org/wiki/WebID" class="mandatory" data-link-text="https:/​/​www.w3.org/​wiki/​WebID">WebID</a> (Web Identity and Discovery)
+is a URL through which agents can be identified on the Web.
+<a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/2005/Incubator/webid/spec/tls/">WebID-TLS</a> <span class="references">[<a href="#ref-25">25</a>]</span> is a protocol that allows authentication of WebID agents via TLS certificates.
+However, due to the limited support of such certificates in Web browsers, its usage is hindered.
+<a property="schema:citation http://purl.org/spar/cito/cites" href="https://github.com/solid/webid-oidc-spec">WebID-OIDC</a> <span class="references">[<a href="#ref-26">26</a>]</span> is a more recent protocol is based
+on the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID Connect</a> <span class="references">[<a href="#ref-27">27</a>]</span> protocol for authenticating WebID agents.
+Due to its compatibility with modern Web browsers, WebID-OIDC is frequently used inside the Solid ecosystem.</p>
+
+          <h4 id="authorization">Authorization</h4>
+
+          <p>Authorization involves determining who can read or write what kind of data.
+<a property="schema:citation http://purl.org/spar/cito/cites" href="https://solid.github.io/web-access-control-spec/">Web Access Control</a> <span class="references">[<a href="#ref-28">28</a>]</span> is an RDF-based access control system that works in a decentralized fashion.
+It enables declarative access control policies for documents to be assigned to users and groups.
+Due to its properties, it is being used as default access control mechanism in the Solid ecosystem.
+Sacco et al. <span class="references">[<a href="#ref-29">29</a>]</span> extend Web Access Control to not only declare document-level access,
+but also on resource, statement and graph level.
+Costabello et al. <span class="references">[<a href="#ref-30">30</a>]</span> introduce the Shi3ld framework that enables access control for <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2015/REC-ldp-20150226/">Linked Data Platform</a> <span class="references">[<a href="#ref-31">31</a>]</span>.
+Two variants of this framework exist; one based on a SPARQL query engine,
+and one more limited variant that works without SPARQL queries.
+Kirrane et al. <span class="references">[<a href="#ref-32">32</a>]</span> introduce a framework
+for enabling query-based access control via query rewriting of simple graph pattern queries.
+Further, Steyskal et al. <span class="references">[<a href="#ref-33">33</a>]</span> provide an approach that is based on the Open Digital Rights Language.
+Finally, Taelman et al. <span class="references">[<a href="#ref-34">34</a>]</span> introduce a framework
+to optimize federated querying over documents that require access control,
+by incorporating authorizations into privacy-preserving data summaries.</p>
+
+          <h3 id="web-crawlers">Web Crawlers</h3>
+
+          <p>Web crawling <span class="references">[<a href="#ref-35">35</a>]</span> is a process that involves collecting information on the Web by following links between pages.
+Web crawlers are typically used for Web indexing to aid search engines.
+Focused crawling <span class="references">[<a href="#ref-36">36</a>]</span> is a special form of Web crawling that prioritizes certain Web pages,
+such as Web pages about a certain topic, or domains for a certain country.
+LTQP can therefore be considered as an area of focused crawling that where the priority lies in achieving query results.</p>
+
+          <p>Web crawlers are often used for discovering vulnerable Web sites,
+for example through <em>Google Dorking</em> <span class="references">[<a href="#ref-37">37</a>]</span>,
+which involves using Google Search to find Web sites that are misconfigured or use vulnerable software.
+Furthermore, crawlers are often used to find private information on Web sites.
+Such issues are however not the focus of this work.
+Instead, we are interested in the security of the crawling process itself,
+for which little research has been done to the best of our knowledge.</p>
+
+          <p>One related work in this area involves abusing crawlers to initiate attacks on other Web sites <span class="references">[<a href="#ref-38">38</a>]</span>.
+This may cause performance degradation on the attacked Web site,
+or could even cause the crawling agent to be blocked by the server.
+These attacks involve convincing the crawler to follow a link to a third-party Web site
+that exploits a certain vulnerability, such as an SQL injection.
+Additionally, this work describes a type of attack that allows vulnerable Web sites to be used
+for improving the PageRank <span class="references">[<a href="#ref-39">39</a>]</span> of an attacker-owned Web site via forged backlinks.</p>
+
+          <p>Some other works focus on mitigation of so-called <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.contentkingapp.com/academy/crawler-traps/"><em>crawler traps</em></a> <span class="references">[<a href="#ref-40">40</a>, <a href="#ref-41">41</a>]</span> or <em>spider traps</em>.
+These are sets of URLs that cause an infinite crawling process,
+which can either be intentional or accidental.
+Such crawler traps can have multiple causes:</p>
+
+          <ul>
+            <li>Links between dynamic pages that are based on URLs with query parameters;</li>
+            <li>Infinite redirection loops via using the HTTP 3xx range;</li>
+            <li>Links to search APIs;</li>
+            <li>Infinitely paged resources, such as calendars;</li>
+            <li>Incorrect relative URLs that continuously increase the URL length.</li>
+          </ul>
+
+          <p>Crawler traps are mostly discovered through human intervention when many documents in a single domain are discovered.
+Recently, a new detection technique was introduced <span class="references">[<a href="#ref-42">42</a>]</span>
+that attempts to measure the <em>distance</em> between documents,
+and rejects links to documents that are too similar.</p>
+
+          <h3 id="web-browsers">Web Browsers</h3>
+
+          <p>Web browsers enable users to visualize and interact with Web pages.
+This interaction is closely related to LTQP,
+with the main difference that LTQP works autonomously,
+while Web browsers are user-driven.
+Considering this close resemblance between these two domains,
+we give an overview of the main security vulnerabilities in Web browsers.</p>
+
+          <h4 id="modern-web-browser-architecture">Modern Web browser architecture</h4>
+
+          <p>Silic et al. <span class="references">[<a href="#ref-43">43</a>]</span>
+analyzed the architectures of modern Web browsers,
+determined the main vulnerabilities,
+and discuss how these issues are coped with.</p>
+
+          <p>Architecture-wise, browsers can be categorized into monolithic and modular browser architectures.
+The difference between the two is that the former does not provide isolation between concurrently executed Web programs, while the latter does.
+The authors argue that a modular architecture is important for security, fault-tolerance and memory management.
+They focused on the security aspects of the Chrome browser architecture <span class="references">[<a href="#ref-44">44</a>]</span>,
+which consists of separate modules for the rendering engine, browser kernel, and plugins.
+Each of these modules is isolated in its own operating system process.</p>
+
+          <p>Silic et al. list the following main threats for Web browsers:</p>
+
+          <ol>
+            <li><strong>System compromise</strong>: Malicious arbitrary code execution with full privileges on behalf of the user. For example, exploits in the browser or third-party plugins caused by bugs. These types of attacks are mitigated through automatic updates once exploits become known.</li>
+            <li><strong>Data theft</strong>: Ability to steal local network or system data. For example, a Web page includes a subresource to URLs using the file scheme (<code>file://</code>). which are usually blocked.</li>
+            <li><strong>Cross domain compromise</strong>: Code from a Fully Qualified Domain Name (FQDN) executes code (or reads data) from another FQDN. For example, a malicious domain could extract authentication cookies from your bank’s website you are logged into. This is usually blocked through the same-origin policy, but can be explicitly allowed through <a href="https://fetch.spec.whatwg.org/#http-cors-protocol" class="mandatory" data-link-text="https:/​/​fetch.spec.whatwg.org/​#http-​cors-​protocol">Cross-Origin Resource Sharing (CORS)</a>.</li>
+            <li><strong>Session hijacking</strong>: Session tokens are compromised through theft or session token prediction. For example, cross-domain request forgery (CSRF) <span class="references">[<a href="#ref-45">45</a>]</span> is a type of attack that involves an attacker forcing a user logged in on another Web site to perform an action without their consent. Web browsers do not protect against these, but are typically handled by Web frameworks via the Synchronizer Token Pattern <span class="references">[<a href="#ref-46">46</a>]</span>.</li>
+            <li><strong>User interface compromise</strong>: Manipulating the user interface to trick the user into performing an action without their knowledge. For example, placing an invisible button in front of another button. This category also includes CPU and memory hogging to block the user from taking any further actions. Web browser have limited protections for these types of attacks that involve placing limitations on user interface manipulations.</li>
+          </ol>
+
+          <h4 id="lessons-from-google-chrome">Lessons from Google Chrome</h4>
+
+          <p>Reis et al. <span class="references">[<a href="#ref-47">47</a>]</span> discuss on the three problems Google Chrome developers focus on to mitigate attacks:</p>
+
+          <ol>
+            <li><strong>Reducing vulnerability severity</strong>: In the real world, large projects such as Web browsers always contain bugs. Given this reality, Google Chrome consists of several sandbox layers reducing the damage should an exploit be discovered in one of the layers. The difficulty here lies in the fact that Web compatibility should be maintained, so that security restrictions do not break people’s favorite Web sites.</li>
+            <li><strong>Reducing window of vulnerability</strong>: If an exploit has been discovered, it should be patched as soon as possible. Google Chrome follows automated testing to ship security patches as soon as possible. All existing Chrome installations check for updates every five hours, and update in the background without disrupting the user experience.</li>
+            <li><strong>Reducing frequency of exposure</strong>: In order to avoid people from visiting malicious Web sites for which the browser has not been patched yet, Google Chrome makes use of a continuously updating database of such Web sites. This will show a warning to the user before visiting such a site.</li>
+          </ol>
+
+          <h4 id="techniques-for-mitigating-browser-vulnerabilities">Techniques for mitigating browser vulnerabilities</h4>
+
+          <p>Browser Hardening <span class="references">[<a href="#ref-48">48</a>]</span> is based on the concept of reducing privileges of browsers to increase security.
+For example, browsers can be configured to disabled JavaScript and Adobe Flash, or whitelisted to trusted Web sites.</p>
+
+          <p>Fuzzing <span class="references">[<a href="#ref-49">49</a>]</span> is a technique that involves generating random data as input to software.
+Major Web browsers such as Google Chrome and Microsoft Edge perform extensive fuzzed testing by generating random Web pages and running them through the browser to detect crashes and other vulnerabilities.</p>
+
+          <h3 id="sql-injection">SQL Injection</h3>
+
+          <p>SQL injection attacks <span class="references">[<a href="#ref-4">4</a>]</span> are one of the most common vulnerabilities on Web sites
+where (direct or indirect) user input is not properly handled, and may lead to the attacker performing unintended SQL statements on databases.
+These types of attacks are typically mitigated through strong input validation, which are typically available in reusable libraries.</p>
+
+        </div>
+</section>
+
+  <section id="use-case" inlist="" rel="schema:hasPart" resource="#use-case">
+<div datatype="rdf:HTML" property="schema:description">
+          <h2 property="schema:name">Use Case</h2>
+
+          <p>In this section, we introduce a use case
+that will be used to illustrate the security threats discussed throughout this article.</p>
+
+          <p>We assume a Web with public and private information,
+which may for instance be achieved via personal data vaults
+following the principles of the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://ruben.verborgh.org/articles/redecentralizing-the-web/">Solid ecosystem</a> <span class="references">[<a href="#ref-1">1</a>]</span>.
+This data vault is in full control of the owner,
+and they can host any kind of file in here, such as Linked Data files.</p>
+
+          <p>For this use case, we assume the existence of three people (Alice, Bob, and Carol),
+each having their own personal data vault.
+Alice uses her vault to store an address book containing the people she knows.
+Instead of storing contact details directly in the address book,
+she stores <em>links</em> to the profiles of her contacts (Bob and Carol).
+Bob and Carol can then self-define their own contact details.
+<a href="#figure-use-case">Fig. 1</a> shows an illustration of this setup.</p>
+
+          <p>The LTQP paradigm is well-suited to handle query execution over such setups.
+If Alice for instance would like to obtain the names of all her contacts,
+she could initiate a query starting from her address book as seed document,
+and the query engine would follow the links to her contacts,
+and obtain the names from their respective profiles.
+Some documents may require authentication before they can be accessed,
+for which Alice’s query engine makes use of Alice’s identity.
+In all threats throughout this article,
+we assume that Carol has malicious intentions that Alice is unaware of.</p>
+
+          <p>In this use case, two main roles can be identified.
+The first is the role of data publisher,
+which is taken up by Alice, Bob, and Carol though their person data vaults.
+The second is the role of the query initiator,
+which here applies to Alice, as she issues a query over her contacts.</p>
+
+          <figure id="figure-use-case">
+<img src="img/use-case.svg" alt="[Personal Address Book]" class="figure-width-twothird" />
+<figcaption>
+              <p><span class="label">Fig. 1:</span> Overview of the address book use case
+in which Alice has an address book with links to the profiles of Carol and Bob,
+which contain further details.</p>
+            </figcaption>
+</figure>
+
+        </div>
+</section>
+
+  <section id="classification" inlist="" rel="schema:hasPart" resource="#classification">
+<div datatype="rdf:HTML" property="schema:description">
+          <h2 property="schema:name">Classification of Security Vulnerabilities</h2>
+
+          <p>In this section, we first introduce the background on classifying security vulnerabilities in software.
+After that, we introduce a classification method specifically for the LTQP domain.</p>
+
+          <h3 id="background">Background</h3>
+
+          <p>Security vulnerabilities in software can be classified using many different methods <span class="references">[<a href="#ref-50">50</a>, <a href="#ref-51">51</a>]</span>.
+Generic classification methods often result in very large taxonomies,
+which are shown to result in practical problems <span class="references">[<a href="#ref-50">50</a>]</span> because of their size and complexity.</p>
+
+          <p>Seacord et al. <span class="references">[<a href="#ref-50">50</a>]</span>
+claim that classification methods must be based on engineering analysis of the problem domain,
+instead of being too generic.
+For this, they suggest the use of domain-specific attributes for classifying security vulnerabilities for each domain separately.
+Furthermore, they introduce the following terminology for security vulnerabilities,
+by building upon earlier formal definitions of vulnerabilities <span class="references">[<a href="#ref-51">51</a>]</span>:</p>
+
+          <dl>
+            <dt>Security flaw</dt>
+            <dd>A defect in a software application or component that, when combined with the necessary conditions, can lead to a software vulnerability.</dd>
+            <dt>Vulnerability</dt>
+            <dd>A set of conditions that allows violation of an explicit or implicit security policy.</dd>
+            <dt>Exploit</dt>
+            <dd>A technique that takes advantage of a security vulnerability to violate an explicit or implicit security policy.</dd>
+            <dt>Mitigation</dt>
+            <dd>Techniques to prevent or limit exploits against vulnerabilities.</dd>
+          </dl>
+
+          <p>For the remainder of this article, we will make use of this terminology,
+and we adopt a method hereafter for classifying software vulnerabilities specific to the LTQP domain
+as recommended by Seacord et al. <span class="references">[<a href="#ref-50">50</a>]</span>.</p>
+
+          <h3 id="classification-method">Classification Method</h3>
+
+          <p>Our classification method considers the listing of several security <em>vulnerabilities</em>.
+Each vulnerability has two properties, as shown in <a href="#table-vulnerability-properties">Table 1</a>.
+The <em>Possible exploits</em> property refers to a number of <em>exploits</em> that may take advantage of this vulnerability,
+and the <em>Mitigations</em> property refers to a number of <em>mitigations</em> that may prevent or limit this vulnerability.
+The different properties of each exploit are shown in <a href="#table-exploit-properties">Table 2</a>,
+and the properties for each mitigation are shown in <a href="#table-mitigation-properties">Table 3</a>.</p>
+
+          <figure id="table-vulnerability-properties" class="table">
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Values</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Possible exploits</td>
+                  <td>Intercepting private data, crashing a system, …</td>
+                </tr>
+                <tr>
+                  <td>Mitigations</td>
+                  <td>Sandboxing, same-origin policy, …</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <figcaption>
+              <p><span class="label">Table 1:</span> Vulnerability properties specific to LTQP, with several possible values for each attribute.</p>
+            </figcaption>
+          </figure>
+
+          <figure id="table-exploit-properties" class="table">
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Values</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Attacker</td>
+                  <td>Data publisher, …</td>
+                </tr>
+                <tr>
+                  <td>Victim</td>
+                  <td>LTQP engine, query initiator, data publisher, …</td>
+                </tr>
+                <tr>
+                  <td>Impact</td>
+                  <td>Incorrect query results, system crash, …</td>
+                </tr>
+                <tr>
+                  <td>Difficulty</td>
+                  <td>Easy, medium, hard</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <figcaption>
+              <p><span class="label">Table 2:</span> Exploit properties specific to LTQP, with several possible values for each attribute.</p>
+            </figcaption>
+          </figure>
+
+          <figure id="table-mitigation-properties" class="table">
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Values</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Location</td>
+                  <td>LTQP engine, query initiator, data publisher, …</td>
+                </tr>
+                <tr>
+                  <td>Difficulty</td>
+                  <td>Easy, medium, hard</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <figcaption>
+              <p><span class="label">Table 3:</span> Mitigation properties specific to LTQP, with several possible values for each attribute.</p>
+            </figcaption>
+          </figure>
+
+        </div>
+</section>
+
+  <section id="vulnerabilities" inlist="" rel="schema:hasPart" resource="#vulnerabilities">
+<div datatype="rdf:HTML" property="schema:description">
+          <h2 property="schema:name">Data-driven Vulnerabilities</h2>
+
+          <p>As shown before in <a href="#related-work-rdf-query-processing">Subsection 2.2</a>,
+most research on identifying security vulnerabilities within RDF query processing
+focuses on the query itself as a means of attacking, mostly through injection techniques.
+Since LTQP engines also accepts queries as input,
+these existing techniques will therefore also apply to LTQP engines.</p>
+
+          <p>In this work, we acknowledge the importance of these vulnerabilities,
+but we instead place our attention onto a new class of vulnerabilities
+that are specific to LTQP engines as a consequence of the open and uncontrolled nature of data on the Web.
+Concretely, we consider two main classes of security vulnerabilities to LTQP engines:</p>
+
+          <ol>
+            <li><strong>Query-driven</strong>: vulnerabilities that are caused by modifying queries that are the input to certain query engines.</li>
+            <li><strong>Data-driven</strong>: vulnerabilities that are caused by the presence, structuring, or method of publishing data on the Web.</li>
+          </ol>
+
+          <p>To the best of our knowledge, all existing work on security vulnerabilities within RDF query processing
+has focused on query-driven vulnerabilities.
+Given its importance for LTQP engines,
+we purely focus on data-driven vulnerabilities for the remainder of this work.</p>
+
+          <p>We identify three main orthogonal axes for security vulnerabilities, based on their exploit’s potential impact area:</p>
+
+          <ol>
+            <li><strong>Query Results</strong>: vulnerabilities that lead to exploits regarding query results.</li>
+            <li><strong>Data Integrity</strong>: vulnerabilities that lead to exploits regarding one or more user’s data.</li>
+            <li><strong>Query Process</strong>: vulnerabilities that lead to exploits regarding the stability of the query engine’s process.</li>
+          </ol>
+
+          <p><a href="#vulnerabilities-overview">Table 4</a> gives an overview of all vulnerabilities that we consider in this article,
+and to what vulnerability axes they apply.</p>
+
+          <figure id="vulnerabilities-overview" class="table">
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Threat</th>
+                  <th>Query Results</th>
+                  <th>Data Integrity</th>
+                  <th>Query Process</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Unauthorized Statements</td>
+                  <td>✓</td>
+                  <td> </td>
+                  <td> </td>
+                </tr>
+                <tr>
+                  <td>Intermediate Result and Query Leakage</td>
+                  <td>✓</td>
+                  <td> </td>
+                  <td> </td>
+                </tr>
+                <tr>
+                  <td>Session Hijacking</td>
+                  <td> </td>
+                  <td>✓</td>
+                  <td> </td>
+                </tr>
+                <tr>
+                  <td>Cross-site Data Injection</td>
+                  <td>✓</td>
+                  <td>✓</td>
+                  <td> </td>
+                </tr>
+                <tr>
+                  <td>Arbitrary Code Execution</td>
+                  <td> </td>
+                  <td>✓</td>
+                  <td>✓</td>
+                </tr>
+                <tr>
+                  <td>Link Traversal Trap</td>
+                  <td> </td>
+                  <td> </td>
+                  <td>✓</td>
+                </tr>
+                <tr>
+                  <td>System hogging</td>
+                  <td> </td>
+                  <td> </td>
+                  <td>✓</td>
+                </tr>
+                <tr>
+                  <td>Document Corruption</td>
+                  <td> </td>
+                  <td> </td>
+                  <td>✓</td>
+                </tr>
+                <tr>
+                  <td>Cross-query Execution Interaction</td>
+                  <td> </td>
+                  <td>✓</td>
+                  <td> </td>
+                </tr>
+                <tr>
+                  <td>Document Priority Modification.</td>
+                  <td>✓</td>
+                  <td> </td>
+                  <td> </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <figcaption>
+              <p><span class="label">Table 4:</span> An overview of all vulnerabilities related to LTQP that are considered in this article.
+They are decomposed into the different vulnerability axes to which they apply.</p>
+            </figcaption>
+          </figure>
+
+          <p>Hereafter, we explain and classify each vulnerability using the classification method from <a href="#classification">Section 4</a>.
+For each vulnerability, we provide at least one possible example of an <em>exploit</em> based on our use case,
+and sketch at least one possible <em>mitigation</em>.</p>
+
+          <p>Unless mentioned otherwise, we do not make any assumptions about specific forms or semantics of LTQP,
+which can influence which links are considered.
+The only general assumption we make is that we have an LTQP query engine that follows links in any way,
+and executes queries over the union of the discovered documents.</p>
+
+          <h3 id="vulnerability-unauthorized-statements">Unauthoritative Statements</h3>
+
+          <p>A consequence of the open-world assumption <span class="references">[<a href="#ref-52">52</a>]</span> where anyone can say anything about anything,
+is that both valid and invalid (and possibly malicious) things can be said.
+When a query engine is traversing the Web,
+it is therefore possible that it can encounter information that impacts the query results in an undesired manner.
+This information could be <a property="schema:citation http://purl.org/spar/cito/cites" href="https://arxiv.org/abs/2005.02239"><em>untrusted</em></a> <span class="references">[<a href="#ref-16">16</a>, <a href="#ref-53">53</a>]</span>, <em>contradicting</em>, or <em>incorrect</em>.
+Without mitigations to this vulnerability, query results from an LTQP can therefore never be really trusted,
+which brings the practical broad use of LTQP into question.</p>
+
+          <p><strong>Exploit: producing untrusted query results by adding unauthoritative triples</strong></p>
+
+          <p>Given our use case, Carol could for instance decide to add one additional triple to her profile,
+such as: <code>&lt;https://bob.pods.org/profile#me&gt; :name "Dave"</code>.
+She would therefore indicate that Bob’s name is “Dave”.
+This is obviously false, but she is “allowed” to state this under the open world assumption.
+However, this means that if Alice would naively query for all her friend’s names via LTQP,
+she would have two names for Bob appear in her results,
+namely “Bob” and “Dave”, where this second result may be undesired.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Query results from the LTQP engine of Alice</dd>
+            <dt>Impact</dt>
+            <dd>Untrusted query results</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy (adding triples to an RDF document)</dd>
+          </dl>
+
+          <p><strong>Mitigation 1: applying content policies</strong></p>
+
+          <p>One solution to this vulnerability <a property="schema:citation http://purl.org/spar/cito/cites" href="https://arxiv.org/abs/2005.02239">has been proposed</a> <span class="references">[<a href="#ref-16">16</a>]</span>,
+whereby the concept of <em>Content Policies</em> are introduced.
+These policies can capture the notion of what one considers authoritative,
+which can vary between different people or agents.
+In our example, Alice could for example decide to only trust her contacts to make statements about themselves,
+and exclude all other information they express during query processing.
+Such a policy would enable Alice’s query for contact names to not produce Carol’s false name for Bob.
+This concept of Content Policies does however only exist in theory,
+so no concrete mitigation to this vulnerability exist yet.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>Data publishers and LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Currently hard (content policy implementations do not exist yet)</dd>
+          </dl>
+
+          <p><strong>Mitigation 2: tracking provenance</strong></p>
+
+          <p>Another solution to this vulnerability has been suggested <span class="references">[<a href="#ref-53">53</a>]</span>
+to make use of <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2013/REC-prov-o-20130430/">data provenance</a> <span class="references">[<a href="#ref-54">54</a>]</span>.
+In contrast to the previous mitigation,
+this approach would not limit what is incorporated from what sources,
+but instead it would document the sources information came from.
+The end-user can then decide afterwards what provenance trails it seems trustworthy.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <h3 id="vulnerability-intermediate-leakage">Intermediate Result and Query Leakage</h3>
+
+          <p>This vulnerability assumes the existence of a <em>hybrid</em> LTQP query engine that primarily traverses links,
+but can exploit database-oriented interfaces such as SPARQL endpoints if they are detected in favour of a range of documents.
+Furthermore, we assume a range of documents that require authentication,
+as their contents are not accessible to everyone.
+Query engines typically decompose queries into smaller sub-queries,
+and join these intermediate results together afterwards.
+In the case of a hybrid LTQP engine,
+intermediate results that are obtained from the traversal process from non-public documents
+could be joined with data from a discovered SPARQL endpoint.
+An attacker could therefore set up an interface that acts as a SPARQL endpoint,
+but is in fact a <strong>malicious interface that intercepts intermediate results</strong> from LTQP engines.</p>
+
+          <p><strong>Exploit: capturing intermediary results via malicious SPARQL endpoint</strong></p>
+
+          <p>Based on our use case, Carol could include a triple with a link to the SPARQL endpoint at <code>http:/​/​attacker.com/sparql</code>.
+If Alice makes use of a hybrid LTQP engine with an adaptive query planner, this internal query planner could decide to make use of this malicious endpoint
+once it has been discovered.
+Depending on the query planner, this could mean that non-public intermediate results from the traversal process such as Bob’s telephone 
+are used as input to the malicious SPARQL endpoint.
+Other query planning algorithms could even decide to send the full original SPARQL query into the malicious endpoint.
+Depending on the engine and its query plan,
+this could give the attacker knowledge of intermediate results,
+or even the full query.
+This vulnerability enables attackers to do obtain insights to user behaviour, which is a privacy concern.
+A more critical problem is when private data is being leaked that normally exists behind access control, such as bank account numbers.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>SPARQL endpoint publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Intermediary results of the LTQP engine of Alice</dd>
+            <dt>Impact</dt>
+            <dd>Leakage of (intermediary) query results</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium (setting up a malicious SPARQL endpoint)</dd>
+          </dl>
+
+          <p><strong>Mitigation: Same-origin policy</strong></p>
+
+          <p>As this vulnerability is similar to the <em>cross-domain compromise</em> and <em>data theft</em> vulnerabilities in Web browsers <span class="references">[<a href="#ref-43">43</a>]</span>.
+A possible solution to it would be in the form of the <em>same-origin policy</em> that is being employed in most of today’s Web browsers.
+In essence, this would mean that intermediate results can not be used across different Fully Qualified Domain Names (FQDN).
+Such a solution would have to be carefully designed as to not lead to performance issues,
+or lead to significant querying restrictions that would lead to fewer relevant query results.
+A mechanism in the form of <a href="https://fetch.spec.whatwg.org/#http-cors-protocol" class="mandatory" data-link-text="https:/​/​fetch.spec.whatwg.org/​#http-​cors-​protocol">Cross-Origin Resource Sharing (CORS)</a>
+could be used as a workaround to explicitly allow intermediate result sharing from one a domain to another.
+Such a workaround should be designed carefully, as not to suffer from the same <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.usenix.org/system/files/conference/usenixsecurity18/sec18-chen.pdf">issues as CORS</a> <span class="references">[<a href="#ref-55">55</a>]</span>.
+Related to this, just like Web browsers, query engines may provide queryable access to local files using the <code>file://</code> scheme.
+Web browsers typically block requests to these from remote locations due to their sensitive nature.
+Similarly, query engines may decide to also block requests to URLs using the <code>file://</code> scheme,
+unless explicitly enabled by the user.
+This approach is for example followed by the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://comunica.github.io/Article-ISWC2018-Resource/">Comunica query engine</a> <span class="references">[<a href="#ref-56">56</a>]</span>.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy (hard with CORS-like workaround)</dd>
+          </dl>
+
+          <h3 id="vulnerability-session-hijacking">Session Hijacking</h3>
+
+          <p>In this vulnerability, we assume the presence of some form of authentication
+(such as <a property="schema:citation http://purl.org/spar/cito/cites" href="https://github.com/solid/webid-oidc-spec">WebID-OIDC</a> <span class="references">[<a href="#ref-26">26</a>]</span>) that leads to an active authenticated session.
+This vulnerability is similar to that of Web browsers,
+where the session token can be compromised through theft or session token prediction.
+Such a vulnerability could lead to cross-domain request forgery (CSRF) <span class="references">[<a href="#ref-45">45</a>]</span> attacks,
+where an attacker forces the user to perform an action while authenticated without the user’s consent.</p>
+
+          <p><strong>Exploit: triggering unintended operations on SPARQL endpoint behind access control</strong></p>
+
+          <p>For example, we assume that Alice has a flawed SPARQL endpoint running at <code>http:/​/​my-endpoint.com/sparql</code>,
+which requires Alice’s session for accepting read and write queries.
+Alice’s query engine may have Alice’s session stored by default for when she wants to query against her own endpoint.
+If Carol knows this, she could a malicious triple with a link to <code>http:/​/​my-endpoint.com/sparql?query=DELETE * WHERE { ?s ?p ?o }</code> in her profile.
+While the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/">SPARQL protocol</a> <span class="references">[<a href="#ref-8">8</a>]</span> only allows update queries via HTTP POST,
+Alice’s flawed query engine could implement this incorrectly so that update queries are also accepted via HTTP GET.
+If Alice executes a query over her address book, the query engine could dereference this link
+with her session enabled, which would cause her endpoint to be cleared.
+This vulnerability is however not specific to SPARQL endpoints,
+but may occur on any type of Web API that allows modifying data via HTTP GET requests.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Alice’s stored data</dd>
+            <dt>Impact</dt>
+            <dd>Removal or modification of Alice’s stored data</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy (adding a malicious link to flawed endpoint)</dd>
+          </dl>
+
+          <p><strong>Mitigation: same-origin policy</strong></p>
+
+          <p>This vulnerability should be tackled on different fronts, and primarily requires secure and well-tested software implementations.
+First, it is important that authentication-enabled query engines do not leak sessions across different origins.
+This could be achieved by scoping authentication sessions to the origin URL in which they were created,
+and for each document only allow sessions to be used that are contained within the scope of the document’s origin.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <p><strong>Mitigation: only handle HTTP GET during traversal</strong></p>
+
+          <p>A second mitigation is that traversal should only be allowed using the HTTP GET method.
+This may not always be straightforward,
+as hypermedia vocabularies such as Hydra <span class="references">[<a href="#ref-57">57</a>]</span>
+allow specifying the HTTP method that is to be used when accessing a Web API (e.g. <code>hydra:method</code>).
+Given an unsecure query engine implementation, such HTTP method declarations could be exploited.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <p><strong>Mitigation: adhere to read-only semantics of HTTP GET</strong></p>
+
+          <p>A third mitigation is that Web APIs must strictly follow the read-only semantics of HTTP GET,
+which is not always followed by many Web APIs <span class="references">[<a href="#ref-58">58</a>]</span>,
+either intentionally or due to software bugs.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>Data publishers</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <h3 id="vulnerability-cross-site-injection">Cross-site Data Injection</h3>
+
+          <p>This vulnerability concerns ways by which attackers can inject data or links into documents.
+For instance, HTTP GET parameters are often used to parameterize the contents of documents.
+If such parameters are not properly validated or escaped,
+they can be used by attackers to include malicious data or links.</p>
+
+          <p><strong>Exploit: injecting untrusted links via flawed trusted API</strong></p>
+
+          <p>For example, assuming Alice executes a query over a page from Carol,
+and a compromised API <code>http:/​/​trusted.org/?name</code> that dynamically creates RDF responses based on the <code>?name</code> HTTP GET parameters.
+In this case, the API simply has a Turtle document template into which the name is filled in as a literal value,
+but it does not do any escaping.
+We assume Alice decides to fully trust all links from <code>http:/​/​trusted.org/</code> to other pages,
+but only trust information directly on Carol’s page or links to other trusted domains.
+If Carol includes a link to <code>&lt;http://trusted.org/?name=Bob". &lt;&gt; rdfs:seeAlso &lt;http://hacker.com/invalid-data&gt;. &lt;&gt; foaf:name "abc""</code>,
+then this would cause the API to produce a Turtle document that contains a link to <code>http:/​/​hacker.com/invalid-data</code>,
+which would lead to unwanted data to be included in the query results.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Query results from the LTQP engine of Alice</dd>
+            <dt>Impact</dt>
+            <dd>Untrusted query results</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy (adding triples to an RDF document)</dd>
+          </dl>
+
+          <p><strong>Mitigation: validate API parameters</strong></p>
+
+          <p>No single technique can fully mitigate this vulnerability.
+Just like SQL injection attacks <span class="references">[<a href="#ref-4">4</a>]</span> on Web sites,
+Web APIs should take care of input validation, preferably via reusable and rigorously tested software libraries.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>Data publishers</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <p><strong>Mitigation: expressive content policies</strong></p>
+
+          <p>On the side of query engines, this vulnerability may partially mitigated by carefully designing content policies.
+In the case of our example, defining a policy that enables the full range of (direct and indirect) links
+to be followed from a single domain can be considered unsafe.
+Instead, more restrictive policies may be enforced, at the cost of expressivity and flexibility.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Currently hard (content policies do not exist yet)</dd>
+          </dl>
+
+          <h3 id="vulnerability-arbitrary-code-exec">Arbitrary Code Execution</h3>
+
+          <p>Advanced crawlers such as the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://developers.google.com/search/docs/guides/javascript-seo-basics">Googlebot</a> <span class="references">[<a href="#ref-59">59</a>]</span> allow JavaScript logic to be executed for a limit duration,
+since certain HTML pages are built dynamically via JavaScript at the client-side.
+In this vulnerability, we assume a similar situation for LTQP,
+where Linked Data pages may also be created client-side via an expressive programming language such as JavaScript.
+This would in fact already be applicable to HTML pages that dynamically produce JSON-LD script tags or RDFa in HTML via JavaScript.
+In order to query over such dynamic Linked Data pages,
+a query engine must initiate a process similar to Googlebot’s JavaScript execution phase.
+Such a process does however open the door to potentially major security vulnerabilities
+if malicious code is being read and executed by the query engine during traversal.</p>
+
+          <p><strong>Exploit: manipulate local files via overprivileged JavaScript execution</strong></p>
+
+          <p>For example, we assume that Alice’s LTQP query engine executes JavaScript on HTML pages before extracting its RDFa and JSON-LD.
+Furthermore, this LTQP engine has a security flaw that allows executed JavaScript code to access and manipulate the local file system.
+Carol could include a malicious piece of JavaScript code in her profile that makes use of this flaw to upload all files on the local file system
+to the attacker, and deletes all files afterwards so that she can hold Alice’s data for ransom.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Files on machine in which Alice’s query engine runs</dd>
+            <dt>Impact</dt>
+            <dd>Removal or modification of files on Alice’s machine</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy (adding JavaScript code to a document)</dd>
+          </dl>
+
+          <p><strong>Mitigation: sandbox code execution</strong></p>
+
+          <p>One of the problems Google Chrome developers focus on is <em>reducing vulnerability severity</em>,
+which involves running logic inside one or more sandboxes to reduce the chance of software bugs
+to lead to access to more critical higher-level software APIs.
+While software bugs are nearly impossible to avoid in real-world software,
+a similar sandboxing approach helps reducing the severity of attacks involving arbitrary code execution.
+Such a sandbox would only allow certain operations to be performed,
+which would not include access to the local file system.
+If this sandbox would also support performing HTTP requests,
+then the <em>same-origin policy</em> should also be employed to mitigate the risk of cross-site scripting (XSS) attacks.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <h3 id="vulnerability-link-traversal-trap">Link Traversal Trap</h3>
+
+          <p>LTQP by nature depends on the ability of iteratively following links between documents.
+It is however possible that such <strong>link structures cause infinite traversal paths</strong> and make the traversal engine get trapped,
+either intentionally or unintentionally, just like crawler traps.
+Given this reality, LTQP query engines must be able to detect such traps.
+Otherwise, query engines could never terminate,
+and possibly even produce infinite results.</p>
+
+          <p><strong>Exploit: forming a link cycle</strong></p>
+
+          <p>A link cycle is a simple form of link traversal trap that could be formed in different ways.
+First, at application-level, Carol’s profile could contain a link path to document X,
+and document X could contain a link path back to Carol’s profile.
+Second, at HTTP protocol-level, Carol’s server could return for her profile’s URL an (HTTP 3xx) redirect chain to URL X,
+and URL X could contain a redirect chain back to the URL of her profile.
+Third, at application level, a cycle structure could be simulated via virtual pages that always link back to similar pages, but with a different URL.
+For example, the Linked Open Numbers <span class="references">[<a href="#ref-60">60</a>]</span> project generates a long virtual sequence of natural numbers,
+which could produce a bottleneck when traversed by an LTQP query engine.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Query process of Alice’s query engine</dd>
+            <dt>Impact</dt>
+            <dd>Unresponsiveness of Alice’s query engine</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy</dd>
+          </dl>
+
+          <p><strong>Mitigation: tracking history of links</strong></p>
+
+          <p>Problems with first and second form of link cycles could be mitigated by letting the query engine keep a history of all followed URLs,
+and not dereference a URL that has already been passed before.
+The third form of link cycle makes use of distinct URLs,
+so this first mitigation would not be effective.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy</dd>
+          </dl>
+
+          <p><strong>Mitigation: limit link path length</strong></p>
+
+          <p>An alternative approach that would mitigate this third form –and also the first two forms at a reduced level of efficiency–,
+is to place a limit on the link path length from a given seed document.
+For example, querying from page 0 in the Linked Open Number project with a link path limit of 100 would cause the query engine not to go past page 100.
+This is the approach that is employed by the recommended <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/2020/REC-json-ld11-api-20200716/">JSON-LD 1.1 processing algorithm</a> <span class="references">[<a href="#ref-61">61</a>]</span>
+for handling recursive <code>@context</code> references in JSON-LD documents.
+HTTP libraries typically also limit the number of redirects at protocol-level,
+e.g. the <code>maxRedirects</code> option in the <a href="https://github.com/follow-redirects/follow-redirects" class="mandatory" data-link-text="https:/​/​github.com/​follow-​redirects/​follow-​redirects"><code>follow-redirects</code></a>
+library that is set to a default value of 21.
+Different link path limit values could be applicable for different use cases,
+so query engines could consider making this value configurable for the user.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy</dd>
+          </dl>
+
+          <p><strong>Mitigation: measuring document similarity</strong></p>
+
+          <p>Other more advanced mitigation techniques from the domain of crawler trap mitigation could be extended,
+such as the one that measures similarities between documents to detect crawler traps with common structures <span class="references">[<a href="#ref-42">42</a>]</span>.
+For crawler traps that do not share commonalities across documents,
+mitigation techniques do not exist yet to the best of our knowledge.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Hard</dd>
+          </dl>
+
+          <h3 id="vulnerability-system-hogging">System hogging</h3>
+
+          <p>The <em>user interface compromise</em> vulnerability for Web browsers includes attacks involving CPU and memory hogging
+through (direct or indirect) malicious code execution or by exploiting software flaws.
+Such vulnerabilities also exist for LTQP query engines,
+especially regarding the use of different RDF serializations,
+and their particularities with respect to parsing.</p>
+
+          <p><strong>Exploit: producing infinite RDF documents</strong></p>
+
+          <p>For example, RDF serializations such as <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/turtle/">Turtle</a> <span class="references">[<a href="#ref-62">62</a>]</span> are implicitly designed as to allow streaming serialization and deserialization.
+JSON-LD even explicitly allows this through its <a property="schema:citation http://purl.org/spar/cito/cites" href="https://www.w3.org/TR/json-ld11-streaming/">Streaming JSON-LD note</a> <span class="references">[<a href="#ref-63">63</a>]</span>.
+Due to this streaming property, RDF documents of infinite size can be generated,
+since serializations place no limits on their document sizes.
+Valid use cases exist for publishers to generate infinite RDF documents,
+which can be streamed to query engines.
+Query engines with non-streaming or flawed streaming parsers, can lead to CPU and memory issues.
+Furthermore, similar issues can occur due to very long or infinite IRIs or literals inside documents.
+Other attacks could exist that specifically target known flaws in RDF parsers that cause CPU or memory issues.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Machine in which Alice’s query engine runs</dd>
+            <dt>Impact</dt>
+            <dd>Unresponsiveness or crashing of Alice’s query engine or machine</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy</dd>
+          </dl>
+
+          <p><strong>Mitigation: placing limits for RDF syntaxes</strong></p>
+
+          <p>Even though typically omitted from RDF format specifications,
+implementations often place certain limits on maximum document, IRI and literal lengths.
+For instance, SAX parsers <span class="references">[<a href="#ref-64">64</a>]</span> typically put a limit of 1 megabyte on IRIs and literals,
+and provide the option to increase this limit when certain documents would exceed this threshold.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium (identifying all possible limits may not be trivial)</dd>
+          </dl>
+
+          <p><strong>Mitigation: sandbox RDF parsing</strong></p>
+
+          <p>Applying the approach of sandboxing on RDF parsers would also help mitigate such attacks,
+by for example placing a time and memory limit on the parsing of a document.
+If LTQP engines would allow arbitrary code execution, then more extensive system hogging mitigations
+would be needed just like in Web browsers <span class="references">[<a href="#ref-43">43</a>]</span>.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <h3 id="vulnerability-document-corruption">Document Corruption</h3>
+
+          <p>Since the Web is not a centrally controlled system,
+it is possible that documents are incorrectly formatted,
+either intentional or unintentional.
+RDF formats typically prescribe a restrictive syntax,
+which require parsers to emit an error when it encounters illegal syntax.
+When an LTQP engine discovers and parses a large number of RDF documents,
+possibly in an uncontrolled manner,
+it is undesired that a syntax error in just a single RDF document can cause
+the whole query process to terminate with an error.
+Furthermore, the phenomenon of <em>Link Rot</em> <span class="references">[<a href="#ref-65">65</a>]</span> can lead to links going dead (HTTP 404) at any point in time,
+while finding a link to a URL that produces a 404 response should not always cause the query engine to terminate.</p>
+
+          <p><strong>Exploit: publishing an invalid RDF document</strong></p>
+
+          <p>For example, Carol could decide to introduce a syntax error in her profile document,
+or she could simply remove it to produce a 404 response.
+This would could cause Alice’s queries over her friends from that point on to fail.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Alice’s query engine</dd>
+            <dt>Impact</dt>
+            <dd>Crashing of Alice’s query engine</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy</dd>
+          </dl>
+
+          <p><strong>Mitigation: sandbox RDF parsing</strong></p>
+
+          <p>The sandbox approach is well-suited for handling these types of attacks.
+RDF parsing for each document can run in a sandbox,
+where errors in this document would simply cause parsing of this document to end without crashing the query engine.
+Optionally, a warning could be emitted to the user.
+The same approach could be followed for HTTP errors on the protocol level, such as HTTP 404’s.
+This approach is followed by the <a property="schema:citation http://purl.org/spar/cito/cites" href="https://comunica.github.io/Article-ISWC2018-Resource/">Comunica query engine</a> <span class="references">[<a href="#ref-56">56</a>]</span> via its <a href="https://comunica.dev/docs/query/advanced/context/#4--lenient-execution">lenient execution mode</a>.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <p><strong>Mitigation: lenient RDF parsing</strong></p>
+
+          <p>An alternative mitigation would be to create more lenient RDF parsers that accept syntax errors and attempts to derive the intended meaning,
+similar as to how (non-XHTML) HTML parsers are created.
+The downside of this is that such parsers would not strictly adhere to their specifications.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Hard</dd>
+          </dl>
+
+          <h3 id="vulnerability-cross-query-interaction">Cross-query Execution Interaction</h3>
+
+          <p>Query engines of all forms typically make use of caching techniques to improve performance of query execution.
+LTQP query engines can leverage caching techniques for document retrieval.
+Within a single query execution, or across multiple query executions,
+the documents may be reused, which could reduce the overall number of HTTP requests.
+Such forms of caching can lead to vulnerabilities based on information leaking across different query executions.
+We therefore make the assumption of caching-enabled LTQP engines in this vulnerability.</p>
+
+          <p><strong>Exploit: timing attack to determine prior knowledge</strong></p>
+
+          <p>A first exploit of this vulnerability is an attack that enables Carol to gain knowledge about
+whether or not Bob’s profile has been requested before by Alice.
+We assume that the Alice’s engine issues a query over a document from Carol listing all her pictures.
+We also assume that Bob’s profile contains a link to Carol’s profile.
+If Carol includes a link from her pictures document to Bob’s profile, and Bob’s profile already links to Carol’s profile,
+then the query engine could fetch these three documents in sequence (Carol’s pictures, Bob’s profile, Carol’s profile).
+Since Carol’s pictures and profile are in control of Carol,
+she could perform a timing attack <span class="references">[<a href="#ref-66">66</a>]</span> to derive how long the Alice’s query engine took to process Bob’s profile.
+Since HTTP delays typically form the bottleneck in LTQP,
+Carol could thereby derive if Bob’s profile was fetched from a cache or not.
+This would enable Carol to gain knowledge about prior document lookups,
+which could for example lead to privacy issues with respect to the user’s interests.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Privacy about Alice’s document usage</dd>
+            <dt>Impact</dt>
+            <dd>Alice’s document usage becomes known to Carol</dd>
+            <dt>Difficulty</dt>
+            <dd>Hard</dd>
+          </dl>
+
+          <p><strong>Exploit: unauthenticated cache reuse</strong></p>
+
+          <p>A second exploit assumes the presence of a software flaw inside Alice’s LTQP query engine
+that makes document caches ignore authorization information.
+This example is also a form of the <em>Intermediate Result and Query Leakage</em> vulnerability that was explained before,
+for which we assume the existence of a <em>hybrid</em> LTQP query engine.
+If Alice queries a private file containing her passwords from a server using its authentication key,
+this can cause this passwords file to be cached.
+If Carol has a query endpoint that is being queried by Alice,
+and Carol is aware of the location of Alice’s passwords,
+then she could maliciously introduce a link to Alice’s passwords file.
+Even if the query was not executed with Alice’s authentication key,
+the bug in Alice’s query engine would cause the passwords file to be fetched in full from the cache,
+which could cause parts of it to be leaked to Carol’s query endpoint.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Alice’s private data</dd>
+            <dt>Impact</dt>
+            <dd>Alice’s private data is leaked</dd>
+            <dt>Difficulty</dt>
+            <dd>Easy (if cache is flawed)</dd>
+          </dl>
+
+          <p><strong>Mitigation: sandboxing query execution</strong></p>
+
+          <p>In order to mitigate this vulnerability, the isolation model that is used in Web browsers <span class="references">[<a href="#ref-43">43</a>]</span> could be reused.
+When applied to LTQP query engines, this could mean that each query would be executed in a separate sandbox,
+so that information can not leak across different query executions.
+A downside of this approach is that this may cause a significant performance impact
+when similar queries are executed in sequence, and would cause identical documents to not be reused from the cache anymore.
+In order to mitigate this drawback, solutions may be possible to allow “related queries” to be executed inside the same sandbox.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <h3 id="vulnerability-doc-priority-modification">Document Priority Modification</h3>
+
+          <p>Different techniques are possible to <span property="schema:citation http://purl.org/spar/cito/cites" resource="https://dx.doi.org/10.1007/978-3-319-46523-4_19"><a href="https://link.springer.com/10.1007/978-3-319-46523-4_19">determine the priority of documents</a></span> <span class="references">[<a href="#ref-12">12</a>]</span> during query processing.
+If queries do not specify a custom ordering, this prioritization will impact the ordering of query results.
+Some of these techniques are purely graph-based, such as PageRank <span class="references">[<a href="#ref-39">39</a>]</span>, and can therefore suffer from purely data-driven attacks.
+This vulnerability involves attacks that can influence the priority of documents,
+and thereby maliciously influence what query results come in earlier or later.</p>
+
+          <p><strong>Exploit: malicious PageRank prioritization of documents</strong></p>
+
+          <p>One possible exploit is similar to the attack to modify priorities within crawlers <span class="references">[<a href="#ref-38">38</a>]</span>.
+We assume that Alice issues a query that returns grocery stores in the local area,
+which is executed via a LTQP query engine that makes use of PageRank to prioritize documents.
+Furthermore, we assume a highly-scoring, but vulnerable API that accepts HTTP GET parameters
+that can be abused to inject custom URLs inside the API responses.
+If Carol aims to increase the ranking of her grocery store within Alice’s query for better visibility,
+then she could exploit this vulnerable API.
+Concretely, Carol could place links from the grocery store’s page to this vulnerable API
+using GET parameters that would cause it to link back to Carol’s grocery store.
+Such an attack would lead to a higher PageRank for Carol’s grocery store,
+and therefore an earlier handling and result representation
+of Carol’s grocery store.</p>
+
+          <dl>
+            <dt>Attacker</dt>
+            <dd>Data publisher (Carol)</dd>
+            <dt>Victim</dt>
+            <dd>Order of Alice’s query results</dd>
+            <dt>Impact</dt>
+            <dd>Carol’s page is ranked higher</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <p><strong>Mitigation: validate API parameters</strong></p>
+
+          <p>Several mitigations have been proposed for these types of attacks <span class="references">[<a href="#ref-38">38</a>]</span>.
+A first solution is to place responsibility at the API, and expecting it to patch the exploit.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>Data publishers</dd>
+            <dt>Difficulty</dt>
+            <dd>Medium</dd>
+          </dl>
+
+          <p><strong>Mitigation: content policies</strong></p>
+
+          <p>A second mitigation involves publishers to expose policies that explicitly authorize what links should be considered legitimate,
+and LTQP query engines inspecting these policies when determining document priorities.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>Data publishers and LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Currently hard (content policies do not exist yet)</dd>
+          </dl>
+
+          <p><strong>Mitigation: automated learning of legitimate links</strong></p>
+
+          <p>A third mitigation is to use machine-learning to distinguishing non-legitimate from legitimate links.
+A combination of the three approaches can be used to mitigate this vulnerability.</p>
+
+          <dl>
+            <dt>Location</dt>
+            <dd>LTQP engines</dd>
+            <dt>Difficulty</dt>
+            <dd>Hard</dd>
+          </dl>
+
+        </div>
+</section>
+
+  <section id="conclusions" inlist="" rel="schema:hasPart" resource="#conclusions">
+<div datatype="rdf:HTML" property="schema:description">
+          <h2 property="schema:name">Conclusions</h2>
+
+          <p>In this article, we have identified ten prospective security vulnerabilities related to LTQP,
+inspired by known vulnerabilities in related domains.
+For each vulnerability, we proposed one or more avenues for mitigations.</p>
+
+          <p>Some of these vulnerabilities can already be partially tackled through existing security vulnerability mitigation techniques
+aimed at both <em>LTQP engine developers</em> and <em>data publishers</em>.
+As such, we <strong>recommend LTQP engine developers to</strong>:</p>
+
+          <ul>
+            <li>apply the <strong>same-origin policy</strong> for authentication sessions (<a href="#vulnerability-session-hijacking">Subsection 5.3</a>);</li>
+            <li>only allow traversal using the <strong>HTTP GET</strong> method (<a href="#vulnerability-session-hijacking">Subsection 5.3</a>);</li>
+            <li><strong>restrict link path lengths</strong> to avoid link traversal traps (<a href="#vulnerability-link-traversal-trap">Subsection 5.6</a>);</li>
+            <li>run untrusted code and RDF parsing over untrusted data in a <strong>sandbox</strong> (<a href="#vulnerability-arbitrary-code-exec">Subsection 5.5</a>, <a href="#vulnerability-system-hogging">Subsection 5.7</a>);</li>
+            <li>make errors in the sandbox <strong>not crash the query process</strong> (<a href="#vulnerability-document-corruption">Subsection 5.8</a>).</li>
+          </ul>
+
+          <p>At the same time, <strong>recommend data publishers to</strong>:</p>
+
+          <ul>
+            <li><strong>validate input</strong> to avoid data injection (<a href="#vulnerability-cross-site-injection">Subsection 5.4</a>);</li>
+            <li>ensure <strong>HTTP GET</strong> requests are <strong>read-only</strong> (<a href="#vulnerability-session-hijacking">Subsection 5.3</a>).</li>
+          </ul>
+
+          <p>For the following security vulnerabilities, <strong>no concrete mitigation techniques exist yet</strong>:</p>
+
+          <ul>
+            <li>Unauthorized Statements (<a href="#vulnerability-unauthorized-statements">Subsection 5.1</a>)</li>
+            <li>Intermediate Result and Query Leakage (<a href="#vulnerability-intermediate-leakage">Subsection 5.2</a>)</li>
+            <li>Cross-query Execution Interaction (<a href="#vulnerability-cross-query-interaction">Subsection 5.9</a>)</li>
+            <li>Document Priority Modification <a href="#vulnerability-doc-priority-modification">Subsection 5.10</a></li>
+          </ul>
+
+          <p>With this prospective analysis, we have illustrated the importance of more security-oriented research
+in the domain on LTQP and the general handling of decentralized environments such as <a property="schema:citation http://purl.org/spar/cito/cites" href="https://ruben.verborgh.org/articles/redecentralizing-the-web/">Solid</a> <span class="references">[<a href="#ref-1">1</a>]</span>,
+especially in presence of data behind authentication.
+While some of these vulnerabilities can be mitigated using existing techniques in related domains,
+further research on them is needed to test their impact on implementation,
+analyze their performance impact,
+introduce more performant techniques and algorithms,
+and introduce and apply attack models to test their effectiveness.
+Furthermore, for the security vulnerabilities for which no concrete mitigations exist yet,
+research is perhaps even more critical.
+Since our analysis of security vulnerabilities is by no means exhaustive,
+additional research efforts are needed to uncover and predict potential security vulnerabilities in LTQP.
+Such future research—with our work as a first step—is crucial for enabling a decentralized Web which we can query securely.</p>
+
+        </div>
+</section>
+
+</main>
+
+<footer><section>
+<h2 id="references">References</h2>
+<dl class="references">
+  <dt id="ref-1">[1]</dt>
+  <dd resource="https://ruben.verborgh.org/articles/redecentralizing-the-web/" typeof="schema:Chapter">Verborgh, R.: Re-decentralizing the Web, for good this time. In: Seneviratne, O. and Hendler, J. (eds.) Linking the World’s Information: A Collection of Essays on the Work of Sir Tim Berners-Lee. ACM (2020).</dd>
+  <dt id="ref-2">[2]</dt>
+  <dd resource="https://dx.doi.org/10.1007/s13222-013-0122-1" typeof="schema:Article">Hartig, O.: An Overview on Execution Strategies for Linked Data Queries. Datenbank-Spektrum. 13, 89–99 (2013).</dd>
+  <dt id="ref-3">[3]</dt>
+  <dd resource="https://dx.doi.org/10.1007/978-3-642-04930-9_19" typeof="schema:Article">Hartig, O., Bizer, C., Freytag, J.-C.: Executing SPARQL Queries over the Web of Linked Data. In: Bernstein, A., Karger, D.R., Heath, T., Feigenbaum, L., Maynard, D., Motta, E., and Thirunarayan, K. (eds.) Proceedings of the 8th International Semantic Web Conference. pp. 293–309. Springer (2009).</dd>
+  <dt id="ref-4">[4]</dt>
+  <dd resource="#sqlinjection" typeof="schema:Article">Halfond, W.G., Viegas, J., Orso, A., others: A classification of SQL-injection attacks and countermeasures. In: Proceedings of the IEEE international symposium on secure software engineering. pp. 13–15. IEEE (2006).</dd>
+  <dt id="ref-5">[5]</dt>
+  <dd resource="#sparqlinjectionattacks" typeof="schema:Article">Orduña, P., Almeida, A., Aguilera, U., Laiseca, X., López-de-Ipiña, D., Goiri, A.G.: Identifying security issues in the semantic web: Injection attacks in the semantic query languages. Actas de las {VI} Jornadas Cientifico-Tecnicas en Servicios Web y {SOA}. 51, 4529–4542 (2010).</dd>
+  <dt id="ref-6">[6]</dt>
+  <dd resource="https://www.w3.org/DesignIssues/LinkedData.html" typeof="schema:CreativeWork">Berners-Lee, T.: Linked Data. <a href="https://www.w3.org/DesignIssues/LinkedData.html">https:/​/​www.w3.org/DesignIssues/LinkedData.html</a> (2006).</dd>
+  <dt id="ref-7">[7]</dt>
+  <dd resource="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/" typeof="schema:CreativeWork">Cyganiak, R., Wood, D., Lanthaler, M.: RDF 1.1: Concepts and Abstract Syntax. W3C, <a href="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/">https:/​/​www.w3.org/TR/2014/REC-rdf11-concepts-20140225/</a> (2014).</dd>
+  <dt id="ref-8">[8]</dt>
+  <dd resource="https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/" typeof="schema:CreativeWork">Feigenbaum, L., Todd Williams, G., Grant Clark, K., Torres, E.: SPARQL 1.1 Protocol. W3C, <a href="https://www.w3.org/TR/2013/REC-sparql11-protocol-20130321/">https:/​/​www.w3.org/TR/2013/REC-sparql11-protocol-20130321/</a> (2013).</dd>
+  <dt id="ref-9">[9]</dt>
+  <dd resource="#Squin" typeof="schema:Article">Hartig, O.: SQUIN: a Traversal Based Query Execution System for the Web of Linked Data. In: Proceedings of the ACM SIGMOD International Conference on Management of Data. pp. 1081–1084. ACM (2013).</dd>
+  <dt id="ref-10">[10]</dt>
+  <dd resource="https://dx.doi.org/10.1007/978-3-642-30284-8_8" typeof="schema:Article">Hartig, O.: SPARQL for a Web of Linked Data: Semantics and Computability. In: Simperl, E., Cimiano, P., Polleres, A., Corcho, O., and Presutti, V. (eds.) Proceedings of the 9th international conference on The Semantic Web: research and applications. pp. 8–23. Springer Berlin Heidelberg, Berlin, Heidelberg (2012).</dd>
+  <dt id="ref-11">[11]</dt>
+  <dd resource="#linktraversalfoundations" typeof="schema:Article">Hartig, O., Freytag, J.-C.: Foundations of Traversal based Query Execution over Linked Data. In: Proceedings of the 23rd ACM conference on Hypertext and social media. pp. 43–52. ACM (2012).</dd>
+  <dt id="ref-12">[12]</dt>
+  <dd resource="https://dx.doi.org/10.1007/978-3-319-46523-4_19" typeof="schema:Article">Hartig, O., Özsu, M.T.: Walking Without a Map: Ranking-Based Traversal for Querying Linked Data. In: Groth, P., Simperl, E., Gray, A., Sabou, M., Krötzsch, M., Lecue, F., Flöck, F., and Gil, Y. (eds.) Proceedings of the 13th International Semantic Web Conference. pp. 305–324. Springer (2016).</dd>
+  <dt id="ref-13">[13]</dt>
+  <dd resource="#linktraversalstrategies" typeof="schema:Article">Ladwig, G., Tran, T.: Linked data query processing strategies. In: International Semantic Web Conference. pp. 453–469. Springer (2010).</dd>
+  <dt id="ref-14">[14]</dt>
+  <dd resource="#linktraversalhybrid" typeof="schema:Article">Umbrich, J., Karnstedt, M., Hogan, A., Parreira, J.X.: Freshening up while staying fast: Towards hybrid SPARQL queries. In: International Conference on Knowledge Engineering and Knowledge Management. pp. 164–174. Springer (2012).</dd>
+  <dt id="ref-15">[15]</dt>
+  <dd resource="https://dx.doi.org/10.1016/j.websem.2016.10.001" typeof="schema:Article">Hartig, O., Pérez, J.: LDQL: A query language for the Web of Linked Data. Journal of Web Semantics. 41, 9–29 (2016).</dd>
+  <dt id="ref-16">[16]</dt>
+  <dd resource="https://arxiv.org/abs/2005.02239" typeof="schema:Article">Verborgh, R., Taelman, R.: Guided Link-Traversal-Based Query Processing. Presented at the May (2020).</dd>
+  <dt id="ref-17">[17]</dt>
+  <dd resource="#datasummaries" typeof="schema:Article">Umbrich, J., Hose, K., Karnstedt, M., Harth, A., Polleres, A.: Comparing data summaries for processing live queries over linked data. World Wide Web. 14, 495–544 (2011).</dd>
+  <dt id="ref-18">[18]</dt>
+  <dd resource="#jena" typeof="schema:CreativeWork">Jena, A.: semantic web framework for Java (2007).</dd>
+  <dt id="ref-19">[19]</dt>
+  <dd resource="#semguard" typeof="schema:Article">Yang, X., Chen, Y., Zhang, W., Zhang, S.: Exploring injection prevention technologies for security-aware distributed collaborative manufacturing on the Semantic Web. The International Journal of Advanced Manufacturing Technology. 54, 1167–1177 (2011).</dd>
+  <dt id="ref-20">[20]</dt>
+  <dd resource="#insecurysemwebframework" typeof="schema:Article">Asghar, H., Anwar, Z., Latif, K.: A deliberately insecure RDF-based Semantic Web application framework for teaching SPARQL/SPARUL injection attacks and defense mechanisms. computers &amp; security. 58, 63–82 (2016).</dd>
+  <dt id="ref-21">[21]</dt>
+  <dd resource="https://www.w3.org/TR/2013/REC-sparql11-query-20130321/" typeof="schema:CreativeWork">Harris, S., Seaborne, A.: SPARQL 1.1 Query Language. W3C, <a href="https://www.w3.org/TR/2013/REC-sparql11-query-20130321/">https:/​/​www.w3.org/TR/2013/REC-sparql11-query-20130321/</a> (2013).</dd>
+  <dt id="ref-22">[22]</dt>
+  <dd resource="https://www.w3.org/TR/2013/REC-sparql11-update-20130321/" typeof="schema:CreativeWork">Gearon, P., Passant, A., Polleres, A.: SPARQL 1.1 Update. W3C, <a href="https://www.w3.org/TR/2013/REC-sparql11-update-20130321/">https:/​/​www.w3.org/TR/2013/REC-sparql11-update-20130321/</a> (2013).</dd>
+  <dt id="ref-23">[23]</dt>
+  <dd resource="http://link.springer.com/chapter/10.1007/978-3-642-41338-4_18" typeof="schema:Chapter">Buil-Aranda, C., Hogan, A., Umbrich, J., Vandenbussche, P.-Y.: SPARQL Web-Querying Infrastructure: Ready for Action? In: The Semantic Web–ISWC 2013. pp. 277–293. Springer (2013).</dd>
+  <dt id="ref-24">[24]</dt>
+  <dd resource="#rdfaccesscontrol" typeof="schema:Article">Kirrane, S., Mileo, A., Decker, S.: Access control and the resource description framework: A survey. Semantic Web. 8, 311–352 (2017).</dd>
+  <dt id="ref-25">[25]</dt>
+  <dd resource="https://www.w3.org/2005/Incubator/webid/spec/tls/" typeof="schema:CreativeWork">Story, H., Corlosquet, S., Sambra, A.: WebID Authentication over TLS. W3C, <a href="https://www.w3.org/2005/Incubator/webid/spec/tls/">https:/​/​www.w3.org/2005/Incubator/webid/spec/tls/</a> (2014).</dd>
+  <dt id="ref-26">[26]</dt>
+  <dd resource="https://github.com/solid/webid-oidc-spec" typeof="schema:CreativeWork">WebID-OIDC Authentication Spec. Solid, <a href="https://github.com/solid/webid-oidc-spec">https:/​/​github.com/solid/webid-oidc-spec</a> (2019).</dd>
+  <dt id="ref-27">[27]</dt>
+  <dd resource="https://openid.net/specs/openid-connect-core-1_0.html" typeof="schema:CreativeWork">Sakimura, N., Bradley, J., Jones, M., de Medeiros, B., Mortimore, C.: OpenID Connect Core 1.0 incorporating errata set 1. <a href="https://openid.net/specs/openid-connect-core-1_0.html">https:/​/​openid.net/specs/openid-connect-core-1_0.html</a> (2014).</dd>
+  <dt id="ref-28">[28]</dt>
+  <dd resource="https://solid.github.io/web-access-control-spec/" typeof="schema:CreativeWork">Web Access Control (WAC). Solid, <a href="https://solid.github.io/web-access-control-spec/">https:/​/​solid.github.io/web-access-control-spec/</a> (2019).</dd>
+  <dt id="ref-29">[29]</dt>
+  <dd resource="#accesscontrolwebofdata" typeof="schema:Article">Sacco, O., Passant, A., Decker, S.: An access control framework for the web of data. In: 2011IEEE 10th International Conference on Trust, Security and Privacy in Computing and Communications. pp. 456–463. IEEE (2011).</dd>
+  <dt id="ref-30">[30]</dt>
+  <dd resource="#accesscontrolhttp" typeof="schema:Article">Costabello, L., Villata, S., Rocha, O.R., Gandon, F.: Access control for http operations on linked data. In: Extended Semantic Web Conference. pp. 185–199. Springer (2013).</dd>
+  <dt id="ref-31">[31]</dt>
+  <dd resource="https://www.w3.org/TR/2015/REC-ldp-20150226/" typeof="schema:CreativeWork">Speicher, S., Arw, J., Malhotra, A.: Linked Data Platform 1.0. W3C, <a href="https://www.w3.org/TR/2015/REC-ldp-20150226/">https:/​/​www.w3.org/TR/2015/REC-ldp-20150226/</a> (2015).</dd>
+  <dt id="ref-32">[32]</dt>
+  <dd resource="#securemanipulationlinkeddata" typeof="schema:Article">Kirrane, S., Abdelrahman, A., Mileo, A., Decker, S.: Secure manipulation of linked data. In: International Semantic Web Conference. pp. 248–263. Springer (2013).</dd>
+  <dt id="ref-33">[33]</dt>
+  <dd resource="#accesscontrollinkeddataodrl" typeof="schema:Article">Steyskal, S., Polleres, A.: Defining expressive access policies for linked data using the ODRL ontology 2.0. In: Proceedings of the 10th International Conference on Semantic Systems. pp. 20–23 (2014).</dd>
+  <dt id="ref-34">[34]</dt>
+  <dd resource="#privacypreserving" typeof="schema:Article">Taelman, R., Steyskal, S., Kirrane, S.: Towards Querying in Decentralized Environments with Privacy-Preserving Aggregation. arXiv preprint arXiv:2008.06265. (2020).</dd>
+  <dt id="ref-35">[35]</dt>
+  <dd resource="#crawling" typeof="schema:Article">Shkapenyuk, V., Suel, T.: Design and implementation of a high-performance distributed web crawler. In: Proceedings 18th International Conference on Data Engineering. pp. 357–368. IEEE (2002).</dd>
+  <dt id="ref-36">[36]</dt>
+  <dd resource="#focusedcrawling" typeof="schema:Article">Novak, B.: A survey of focused web crawling algorithms. Proceedings of SIKDD. 5558, 55–58 (2004).</dd>
+  <dt id="ref-37">[37]</dt>
+  <dd resource="#googledorks" typeof="schema:Article">Toffalini, F., Abbà, M., Carra, D., Balzarotti, D.: Google dorks: Analysis, creation, and new defenses. In: International Conference on Detection of Intrusions and Malware, and Vulnerability Assessment. pp. 255–275. Springer (2016).</dd>
+  <dt id="ref-38">[38]</dt>
+  <dd resource="#crawlerattacks" typeof="schema:Article">Zarras, A., Maggi, F.: Hiding Behind the Shoulders of Giants: Abusing Crawlers for Indirect Web Attacks. In: 2017 15th Annual Conference on Privacy, Security and Trust (PST). pp. 355–35509. IEEE (2017).</dd>
+  <dt id="ref-39">[39]</dt>
+  <dd resource="#pagerank" typeof="schema:CreativeWork">Page, L., Brin, S., Motwani, R., Winograd, T.: The PageRank citation ranking: Bringing order to the web. Stanford InfoLab (1999).</dd>
+  <dt id="ref-40">[40]</dt>
+  <dd resource="https://www.contentkingapp.com/academy/crawler-traps/" typeof="schema:CreativeWork">Crawler traps: how to identify and avoid them. <a href="https://www.contentkingapp.com/academy/crawler-traps/">https:/​/​www.contentkingapp.com/academy/crawler-traps/</a> (2020).</dd>
+  <dt id="ref-41">[41]</dt>
+  <dd resource="#mercatorcrawler" typeof="schema:Article">Heydon, A., Najork, M.: Mercator: A scalable, extensible web crawler. World Wide Web. 2, 219–229 (1999).</dd>
+  <dt id="ref-42">[42]</dt>
+  <dd resource="#crawlertrapsdetection" typeof="schema:Article">David, B., Delong, M., Filiol, E.: Detection of crawler traps: formalization and implementation—defeating protection on internet and on the TOR network. Journal of Computer Virology and Hacking Techniques. 1–14 (2021).</dd>
+  <dt id="ref-43">[43]</dt>
+  <dd resource="#securitymodernwebbrowserarchitecture" typeof="schema:Article">Šilić, M., Krolo, J., Delač, G.: Security vulnerabilities in modern web browser architecture. In: The 33rd International Convention MIPRO. pp. 1240–1245. IEEE (2010).</dd>
+  <dt id="ref-44">[44]</dt>
+  <dd resource="#securitychromium" typeof="schema:Chapter">Barth, A., Jackson, C., Reis, C., Team, T.G.C., others: The security architecture of the chromium browser. In: Technical report. Stanford University (2008).</dd>
+  <dt id="ref-45">[45]</dt>
+  <dd resource="#csrf" typeof="schema:Article">Barth, A., Jackson, C., Mitchell, J.C.: Robust defenses for cross-site request forgery. In: Proceedings of the 15th ACM conference on Computer and communications security. pp. 75–88 (2008).</dd>
+  <dt id="ref-46">[46]</dt>
+  <dd resource="#synchronizertokenpattern" typeof="schema:Book">Alur, D., Crupi, J., Malks, D.: Core J2EE patterns: best practices and design strategies. Prentice Hall Professional (2003).</dd>
+  <dt id="ref-47">[47]</dt>
+  <dd resource="#securitychromelessons" typeof="schema:Article">Reis, C., Barth, A., Pizano, C.: Browser security: lessons from google chrome. Queue. 7, 3–8 (2009).</dd>
+  <dt id="ref-48">[48]</dt>
+  <dd resource="#hardening" typeof="schema:Article">Jillepalli, A.A., de Leon, D.C., Steiner, S., Sheldon, F.T., Haney, M.A.: Hardening the client-side: A guide to enterprise-level hardening of web browsers. In: 2017 IEEE 15th Intl Conf on Dependable, Autonomic and Secure Computing, 15th Intl Conf on Pervasive Intelligence and Computing, 3rd Intl Conf on Big Data Intelligence and Computing and Cyber Science and Technology Congress (DASC/PiCom/DataCom/CyberSciTech). pp. 687–692. IEEE (2017).</dd>
+  <dt id="ref-49">[49]</dt>
+  <dd resource="#fuzzing" typeof="schema:Book">Sutton, M., Greene, A., Amini, P.: Fuzzing: brute force vulnerability discovery. Pearson Education (2007).</dd>
+  <dt id="ref-50">[50]</dt>
+  <dd resource="#classifyingsecurityvulnerabilities" typeof="schema:CreativeWork">Seacord, R.C., Householder, A.D.: A structured approach to classifying security vulnerabilities. CARNEGIE-MELLON UNIV PITTSBURGH PA SOFTWARE ENGINEERING INST (2005).</dd>
+  <dt id="ref-51">[51]</dt>
+  <dd resource="#formalmodelingvulnerability" typeof="schema:Article">Fithen, W.L., Hernan, S.V., O’Rourke, P.F., Shinberg, D.A.: Formal modeling of vulnerability. Bell Labs technical journal. 8, 173–186 (2004).</dd>
+  <dt id="ref-52">[52]</dt>
+  <dd resource="#owa" typeof="schema:Article">Drummond, N., Shearer, R.: The open world assumption. In: eSI Workshop: The Closed World of Databases meets the Open World of the Semantic Web (2006).</dd>
+  <dt id="ref-53">[53]</dt>
+  <dd resource="#linktraversaldiverse" typeof="schema:Article">Umbrich, J., Hogan, A., Polleres, A., Decker, S.: Link traversal querying for a diverse web of data. Semantic Web. 6, 585–624 (2015).</dd>
+  <dt id="ref-54">[54]</dt>
+  <dd resource="https://www.w3.org/TR/2013/REC-prov-o-20130430/" typeof="schema:CreativeWork">Belhajjame, K., Cheney, J., Corsar, D., Garijo, D., Soiland-Reyes, S., Zednik, S., Zhao, J.: PROV-O: The PROV Ontology. W3C, <a href="https://www.w3.org/TR/2013/REC-prov-o-20130430/">https:/​/​www.w3.org/TR/2013/REC-prov-o-20130430/</a> (2013).</dd>
+  <dt id="ref-55">[55]</dt>
+  <dd resource="https://www.usenix.org/system/files/conference/usenixsecurity18/sec18-chen.pdf" typeof="schema:Article">Chen, J., Jiang, J., Duan, H., Wan, T., Chen, S., Paxson, V., Yang, M.: We Still Don’t Have Secure Cross-Domain Requests: an Empirical Study of CORS. In: 27th USENIX Security Symposium USENIX Security 18). pp. 1079–1093 (2018).</dd>
+  <dt id="ref-56">[56]</dt>
+  <dd resource="https://comunica.github.io/Article-ISWC2018-Resource/" typeof="schema:Article">Taelman, R., Van Herwegen, J., Vander Sande, M., Verborgh, R.: Comunica: a Modular SPARQL Query Engine for the Web. In: Proceedings of the 17th International Semantic Web Conference (2018).</dd>
+  <dt id="ref-57">[57]</dt>
+  <dd resource="#hydracore" typeof="schema:Article">Lanthaler, M., Gütl, C.: Hydra: A Vocabulary for Hypermedia-Driven Web APIs. LDOW. 996, (2013).</dd>
+  <dt id="ref-58">[58]</dt>
+  <dd resource="#restful" typeof="schema:Article">Rodriguez, A.: Restful web services: The basics. IBM developerWorks. 33, 18 (2008).</dd>
+  <dt id="ref-59">[59]</dt>
+  <dd resource="https://developers.google.com/search/docs/guides/javascript-seo-basics" typeof="schema:CreativeWork">Google: Understand the JavaScript SEO basics. <a href="https://developers.google.com/search/docs/guides/javascript-seo-basics">https:/​/​developers.google.com/search/docs/guides/javascript-seo-basics</a> (2021).</dd>
+  <dt id="ref-60">[60]</dt>
+  <dd resource="#linkedopennumbers" typeof="schema:Article">Vrandecı́c Denny, Krötzsch, M., Rudolph, S., Lösch, U.: Leveraging non-lexical knowledge for the linked open data web. 5th Review of April Fool’s day Transactions. 18–27 (2010).</dd>
+  <dt id="ref-61">[61]</dt>
+  <dd resource="https://www.w3.org/TR/2020/REC-json-ld11-api-20200716/" typeof="schema:CreativeWork">Kellogg, G., Longley, D., Champin, P.-A.: JSON-LD 1.1 Processing Algorithms and API. W3C, <a href="https://www.w3.org/TR/2020/REC-json-ld11-api-20200716/">https:/​/​www.w3.org/TR/2020/REC-json-ld11-api-20200716/</a> (2020).</dd>
+  <dt id="ref-62">[62]</dt>
+  <dd resource="https://www.w3.org/TR/turtle/" typeof="schema:CreativeWork">Prud’hommeaux, E., Carothers, G., Machina, L.: JSON-LD 1.1 Processing Algorithms and API. W3C, <a href="https://www.w3.org/TR/turtle/">https:/​/​www.w3.org/TR/turtle/</a> (2014).</dd>
+  <dt id="ref-63">[63]</dt>
+  <dd resource="https://www.w3.org/TR/json-ld11-streaming/" typeof="schema:CreativeWork">Taelman, R.: Streaming JSON-LD. W3C, <a href="https://www.w3.org/TR/json-ld11-streaming/">https:/​/​www.w3.org/TR/json-ld11-streaming/</a> (2020).</dd>
+  <dt id="ref-64">[64]</dt>
+  <dd resource="#sax" typeof="schema:CreativeWork">Hopp, D.V.: Directed SAX parser for XML documents (2012).</dd>
+  <dt id="ref-65">[65]</dt>
+  <dd resource="#linkrot" typeof="schema:Article">Fetterly, D., Manasse, M., Najork, M., Wiener, J.L.: A large-scale study of the evolution of Web pages. Software: Practice and Experience. 34, 213–237 (2004).</dd>
+  <dt id="ref-66">[66]</dt>
+  <dd resource="#timingattack" typeof="schema:Article">Dhem, J.-F., Koeune, F., Leroux, P.-A., Mestre, P., Quisquater, J.-J., Willems, J.-L.: A practical implementation of the timing attack. In: International Conference on Smart Card Research and Advanced Applications. pp. 167–182. Springer (1998).</dd>
+</dl>
+</section>
+</footer>
+
+</div>
+</div>
+
+
+
+</body>
+</html>
