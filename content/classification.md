@@ -2,7 +2,8 @@
 {:#classification}
 
 In this section, we first introduce the background on classifying security vulnerabilities in software.
-After that, we introduce a classification method specifically for the LTQP domain.
+After that, we introduce a classification method specifically for the LTQP domain,
+to assess the validity of our work.
 
 ### Background
 

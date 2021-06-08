@@ -1,0 +1,28 @@
+To the Editors of the Semantic Web Journal
+
+Dear Editors,
+
+Please find attached to this letter our submission entitled
+"A Prospective Analysis of Security Vulnerabilities within Link Traversal-Based Query Processing"
+for the call for full papers, as suggested by the editors-in-chief.
+In this article, we focus on the security aspect of Link Traversal-Based Query Processing,
+which has received minimal research attention so far.
+
+In particular, the main contribution of this work is
+an analysis of 10 potential security threats within the domain of Link Traversal-Based Query Processing.
+In order to assess the validity of this work,
+we classify these threats using an existing classification method for security vulnerabilities in software.
+
+We hope this article is a good fit for this journal.
+Should you have any further questions or concerns, please do not hesitate to contact us.
+We look forward to hearing back from you and thank you in advance
+for considering the publication of this work in the Semantic Web Journal.
+
+Sincerely,
+Ruben Taelman
+on behalf of the authors
+
+imec - Ghent University - IDLab
+Technologiepark-Zwijnaarde 15
+B-9052 Gent
+Belgium
